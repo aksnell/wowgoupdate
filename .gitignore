@@ -1,0 +1,5 @@
+﻿# Compiled source #
+###################
+*.exe
+\bin
+\.vscode
