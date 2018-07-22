@@ -11,7 +11,7 @@ import (
 type walkFunc func(string) (string, bool)
 
 func makeFilePath(root string, ext string) string {
-	return strings.Join([]string{root, filepath.Base(root), ext}, `\`)
+	return strings.Join([]string{root, filepath.Base(root) + ext}, `\`)
 }
 func getRelPath(root string, base string) string {
 	return filepath.Join(root, base)

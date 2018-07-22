@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-)
-
-const (
-	config = "config.json"
+	"time"
 )
 
 func main() {
+	start := time.Now()
 	log := &log{err: make(map[int][]string)}
 	container, err := buildContainer(log)
 	if err != nil {
@@ -20,6 +18,11 @@ func main() {
 	container.setInstalledAddons()
 	save(container)
 	log.dump(critical)
+	for _, value := range container.Installed {
+		fmt.Println("INITIALIZED", value.Name)
+	}
+	fmt.Println("Addons collected, parsed and verfied, version checked from Curse, and results saved to file in:", time.Since(start))
+	fmt.Println("See data.json for details.")
 	for {
 	}
 }

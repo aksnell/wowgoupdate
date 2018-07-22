@@ -2,7 +2,6 @@
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 )
 
@@ -27,7 +26,6 @@ func (con *addonContainer) setInstalledAddons() {
 			case addon := <-addonChannel:
 				numAddons--
 				if addon != nil {
-					con.log("setInstalledAddons", errors.New("added "+addon.Name), 2)
 					con.Installed[addon.Name] = addon
 				}
 			default:
