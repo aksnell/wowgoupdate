@@ -21,8 +21,8 @@ func buildAddon(path string) *addon {
 		Path: path,
 	}
 	addon.setName()
-	addon.setLocalVersion()
 	addon.setURL()
+	addon.setLocalVersion()
 	addon.setOnlineVersion()
 	return addon
 }
