@@ -26,8 +26,8 @@ const (
 	saveFile    = "data.json"
 )
 
-var reAddonFolderPath = regexp.MustCompile(`([A-z]\:\/)([A-z\s]+[\/])*(World of Warcraft)[.]*`)
+var reAddonFolderPath = regexp.MustCompile(`([A-z]\:\/)(Program\sFiles\s\(x86\)[\/])?(([A-z\s]+[\/]))*(World of Warcraft)[.]*`)
 var reAddonName = regexp.MustCompile(`Title:(?:(?:\|[A-z0-9]{9}|[r])?([A-z0-9\s\.]+)(?:\|[A-z0-9]{9})?([A-z0-9\s\.]+)?)+`)
 var reAlphaNum = regexp.MustCompile(`[a-zA-Z0-9]+`)
-var reAscii = regexp.MustCompile(`[^[:ascii:]]`)
+var reASCII = regexp.MustCompile(`[^[:ascii:]]`)
 var reBrTag = regexp.MustCompile(`\<br\>|\<br\/\>`)

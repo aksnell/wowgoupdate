@@ -6,7 +6,25 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
+
+func getUpdateURL(url string) string {
+	body, err := getURLBody(url + `\files`)
+	if err != nil {
+		return "error at get URLBody"
+	}
+	doc, err := goquery.NewDocumentFromReader(body)
+	if err != nil {
+		return "err at make reader"
+	}
+	updateURL, _ := doc.Find(".button.button--download.download-button.mg-r-05").Attr("href")
+	if err != nil {
+		return "err at find"
+	}
+	return updateURL
+}
 
 func makeCurseURL(path string) string {
 	base := filepath.Base(path)

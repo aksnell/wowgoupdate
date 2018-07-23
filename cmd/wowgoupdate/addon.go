@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/PuerkitoBio/goquery"
@@ -15,40 +16,37 @@ type addon struct {
 	Latest  string `json:"latest"`
 	Current bool   `json:"current"`
 
-	logger *log
-	err    []error
+	err []error
 }
 
-func buildAddon(path string, errLogger *log) *addon {
+func buildAddon(path string) (*addon, error) {
 	if _, err := os.Stat(getRelPath(path, "CHANGES.txt")); os.IsNotExist(err) {
-		return nil
+		return nil, err
 	}
-	addonName := getAddonName(path)
+	addonName, err := getAddonName(path)
 	if addonName == "" {
-		return nil
+		return nil, err
 	}
 	addon := &addon{
-		Name:   addonName,
-		Path:   path,
-		logger: errLogger,
-		err:    make([]error, 0),
+		Name: addonName,
+		Path: path,
 	}
 	addon.setLocalVersion()
 	addon.setURL()
 	addon.setOnlineVersion()
-	return addon
+	return addon, nil
 }
 
-func getAddonName(path string) string {
+func getAddonName(path string) (string, error) {
 	changesPath := makeFilePath(path, `.toc`)
 	if changesPath == "" {
-		return ""
+		return "", errors.New("Could not make .toc filepath from," + path)
 	}
 	name, err := walkFile(changesPath, scanToc)
 	if err != nil {
-		return ""
+		return "", err
 	}
-	return name
+	return name, nil
 }
 
 func (a *addon) setURL() {
@@ -57,29 +55,30 @@ func (a *addon) setURL() {
 		a.URL = url
 		return
 	}
-	a.log(a.Name, errors.New("failed to generate from Name, will try path"), 1)
 	url = makeCurseURL(a.Path)
 	if _, err := getURLBody(url); err == nil {
 		a.URL = url
-		return
 	}
-	a.log(a.Name, errors.New("failed to generate URL from name or path"), 0)
 }
 
 func (a *addon) setOnlineVersion() {
+	fmt.Println(a.URL)
 	body, err := getURLBody(a.URL + `\changes`)
 	if err != nil {
-		a.log(a.Name, err, 0)
+		fmt.Println(err)
+		return
 	}
 	doc, err := goquery.NewDocumentFromReader(body)
 	if err != nil {
-		a.log(a.Name, err, 0)
+		fmt.Println(err)
+		return
 	}
 	changeLine, err := doc.Find(".project-content.mg-t-1.pd-2 p").Eq(0).Html()
 	if err != nil {
-		a.log(a.Name, err, 0)
+		fmt.Println(err)
+		return
 	}
-	strippedLine := reAscii.ReplaceAllString(changeLine, " ")
+	strippedLine := reASCII.ReplaceAllString(changeLine, " ")
 	splitLines := reBrTag.Split(strippedLine, 3)
 	for i := range splitLines {
 		if reAlphaNum.MatchString(splitLines[i]) {
@@ -94,10 +93,6 @@ func (a *addon) setLocalVersion() {
 	var err error
 	a.Version, err = walkFile(getRelPath(a.Path, "CHANGES.txt"), scanChanges)
 	if err != nil {
-		a.log(a.Name, err, 0)
+		fmt.Println(err)
 	}
-}
-
-func (a *addon) log(prefix string, base error, level int) {
-	a.logger.add(prefix, base, level)
 }

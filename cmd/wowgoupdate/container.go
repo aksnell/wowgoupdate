@@ -2,6 +2,7 @@
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 )
 
@@ -9,14 +10,13 @@ type addonContainer struct {
 	AddonDir  string            `json:"path"`
 	Installed map[string]*addon `json:"installed"`
 	Ignored   map[string]bool   `json:"ignored"`
-
-	errHandler *log //Runtime errors
 }
 
 func (con *addonContainer) setInstalledAddons() {
 	addonFolders, err := ioutil.ReadDir(con.AddonDir)
 	if err != nil {
-		con.log("getInstalledAddons", err, 0)
+		fmt.Println(err)
+		return
 	}
 	addonChannel := make(chan *addon)
 	doneChannel := make(chan interface{})
@@ -38,7 +38,12 @@ func (con *addonContainer) setInstalledAddons() {
 	}(len(addonFolders))
 	for _, addonFolder := range addonFolders {
 		go func(addonPath string) {
-			addonChannel <- buildAddon(addonPath, con.errHandler)
+			addon, err := buildAddon(addonPath)
+			if addon == nil || err != nil {
+				addonChannel <- nil
+				return
+			}
+			addonChannel <- addon
 		}(getRelPath(con.AddonDir, addonFolder.Name()))
 	}
 	<-doneChannel
@@ -47,14 +52,11 @@ func (con *addonContainer) setInstalledAddons() {
 func (con *addonContainer) loadSaved() {
 	data, err := ioutil.ReadFile(saveFile)
 	if err != nil {
-		con.log(containerLoadFileErr, err, 1)
+		fmt.Println(err)
+		return
 	}
 	err = json.Unmarshal(data, con)
 	if err != nil {
-		con.log(containerLoadFileErr, err, 0)
+		fmt.Println(err)
 	}
-}
-
-func (con *addonContainer) log(base string, prefix error, level int) {
-	con.errHandler.add(base, prefix, level)
 }
