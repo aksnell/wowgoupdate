@@ -10,13 +10,22 @@ import (
 
 type walkFunc func(string) (string, bool)
 
-func makeFilePath(root string, ext string) string {
+func fileExists(path string) bool {
+	_, err := os.Open(path)
+	return os.IsNotExist(err)
+}
+
+//makeGenericPath returns a path for a file with the same name as the root folder with a user supplied extension.
+func makeGenericPath(root string, ext string) string {
 	return strings.Join([]string{root, filepath.Base(root) + ext}, `\`)
 }
-func getRelPath(root string, base string) string {
+
+//makeSpecificPath is an alias for filepath.Join()
+func makeSpecificPath(root string, base string) string {
 	return filepath.Join(root, base)
 }
 
+//walkText takes a string of text and a walkFunc and scans line by line returning a string based on the walkFunc conditions or an error if it reaches the end.
 func walkText(text string, wF walkFunc) (string, error) {
 	scanner := bufio.NewScanner(strings.NewReader(text))
 	for scanner.Scan() {
@@ -27,6 +36,7 @@ func walkText(text string, wF walkFunc) (string, error) {
 	return "", errors.New("walkText:Reached EOT while scanning text")
 }
 
+//walkFunc takes a path to a file and a walkFunc and scans line by line returning a string based on the walkFunc conditions or an error if it reaches the end.
 func walkFile(path string, wF walkFunc) (string, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -35,12 +45,18 @@ func walkFile(path string, wF walkFunc) (string, error) {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+
 	for scanner.Scan() {
 		if line, err := wF(scanner.Text()); err == true {
 			return line, nil
 		}
 	}
 	return "", errors.New("walkFile:Reached EOF while scanning " + path)
+}
+
+func normalizeString(text string) string {
+	normalized := reNotAlphaNum.ReplaceAllString(reNotASCII.ReplaceAllString(text, ""), "")
+	return normalized
 }
 
 func scanProduct(line string) (string, bool) {
@@ -65,8 +81,4 @@ func scanChanges(line string) (string, bool) {
 		return strings.Trim(line, " "), true
 	}
 	return "", false
-}
-
-func scanChangesURL(line string) {
-
 }

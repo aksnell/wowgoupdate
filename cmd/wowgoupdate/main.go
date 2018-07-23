@@ -13,7 +13,7 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	container.setInstalledAddons()
+	container.getInstalledAddons()
 	err = save(container)
 	if err != nil {
 		fmt.Println(err)

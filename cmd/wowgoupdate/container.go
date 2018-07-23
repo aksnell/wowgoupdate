@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"sync"
 )
 
 type addonContainer struct {
@@ -12,41 +14,25 @@ type addonContainer struct {
 	Ignored   map[string]bool   `json:"ignored"`
 }
 
-func (con *addonContainer) setInstalledAddons() {
+func (con *addonContainer) getInstalledAddons() {
 	addonFolders, err := ioutil.ReadDir(con.AddonDir)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatalln(err)
 	}
-	addonChannel := make(chan *addon)
-	doneChannel := make(chan interface{})
-	go func(numAddons int) {
-		for {
-			select {
-			case addon := <-addonChannel:
-				numAddons--
-				if addon != nil {
-					con.Installed[addon.Name] = addon
-				}
-			default:
-				if numAddons <= 0 {
-					doneChannel <- nil
-					return
-				}
+	wg := sync.WaitGroup{}
+	wg.Add(len(addonFolders))
+	for _, folder := range addonFolders {
+		go func(folder string) {
+			defer wg.Done()
+			addon := buildAddon(makeSpecificPath(con.AddonDir, folder))
+			if addon != nil {
+				fmt.Println(addon.Name)
+				con.Installed[addon.Name] = addon
 			}
-		}
-	}(len(addonFolders))
-	for _, addonFolder := range addonFolders {
-		go func(addonPath string) {
-			addon, err := buildAddon(addonPath)
-			if addon == nil || err != nil {
-				addonChannel <- nil
-				return
-			}
-			addonChannel <- addon
-		}(getRelPath(con.AddonDir, addonFolder.Name()))
+		}(folder.Name())
 	}
-	<-doneChannel
+	wg.Wait()
+	fmt.Println("DONE")
 }
 
 func (con *addonContainer) loadSaved() {
