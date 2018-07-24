@@ -24,9 +24,8 @@ func (con *addonContainer) getInstalledAddons() {
 	for _, folder := range addonFolders {
 		go func(folder string) {
 			defer wg.Done()
-			addon := buildAddon(makeSpecificPath(con.AddonDir, folder))
+			addon := buildAddon(makeSpecificPath(con.AddonDir, folder), con.AddonDir)
 			if addon != nil {
-				fmt.Println(addon.Name)
 				con.Installed[addon.Name] = addon
 			}
 		}(folder.Name())

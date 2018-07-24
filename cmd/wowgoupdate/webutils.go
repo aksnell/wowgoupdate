@@ -3,7 +3,6 @@
 import (
 	"log"
 	"net/http"
-	"path/filepath"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -38,6 +37,6 @@ func isValidURL(URL string) bool {
 
 //return formatted Curse URL from Addon.Name or Addon.Path
 func makeCurseURL(nameOrPath string) string {
-	formattedBaseURL := strings.Join(reAlphaNum.FindAllString(filepath.Base(nameOrPath), -1), "-")
+	formattedBaseURL := strings.Join(reAlphaNum.FindAllString(nameOrPath, 5), "-")
 	return strings.Join([]string{curseURL, formattedBaseURL}, "")
 }

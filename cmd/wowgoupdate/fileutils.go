@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+type walkFunc func(string) (string, bool)
+
 func fileExists(path string) bool {
 	_, err := os.Open(path)
 	return os.IsNotExist(err)
